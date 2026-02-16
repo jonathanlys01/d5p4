@@ -1,0 +1,89 @@
+[project]
+name = "d3p2"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "transformers>=4.57.0",
+    "flash-attn>=2.8.3",
+    "torch>=2.7.0",
+    "omegaconf>=2.3.0",
+    "dppy>=0.3.3",
+    "idr-torch>=2.4.0",
+    "scikit-learn>=1.7.2",
+    "faiss-cpu>=1.12.0",
+    "optuna>=4.5.0",
+    "datasets>=4.4.1",
+    "tiktoken>=0.12.0",
+    "pot>=0.9.6.post1",
+    "sacrebleu>=2.5.1",
+    "nltk>=3.9.2",
+]
+
+[tool.uv.extra-build-dependencies]
+flash-attn = [{requirement = "torch", match-runtime = true }]
+
+[tool.uv.extra-build-variables]
+flash-attn = { FLASH_ATTENTION_SKIP_CUDA_BUILD = "TRUE" }
+
+
+#########################################################
+
+[tool.ruff]
+
+line-length = 120
+indent-width = 4
+
+[tool.ruff.lint]
+extend-select = [
+    "ARG", # flake8-unused-arguments
+    "C90", # mccabe complexity
+    "COM", # commas 
+    "C4",  # flake8-comprehensions
+    "E",   # pycodestyle
+    "F",   # Pyflakes
+    "I",   # isort
+    "PL",  # pylint
+    "SIM", # flake8-simplify
+    "TID", # flake8-tidy-imports
+    "W",   # pycodestyle warnings
+]
+ignore = [
+    "PLR2004", # magic number
+    ]
+
+# Allow fix for all enabled rules (when `--fix`) is provided.
+fixable = ["ALL"]
+
+# Ignore import violations in all `__init__.py` files.
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["E402", "F401", "F403", "F811"]
+
+# external modelling code
+"src/llada_ref/*" = ["ALL"]
+"src/mdlm_ref/*" = ["ALL"]
+"src/mauve/*" = ["ALL"]
+"src/jina_ref/*" = ["ALL"]
+
+[tool.ruff.lint.isort]
+lines-after-imports = 2
+
+[tool.ruff.format]
+# Like Black, use double quotes for strings.
+quote-style = "double"
+
+# Like Black, indent with spaces, rather than tabs.
+indent-style = "space"
+
+# Like Black, respect magic trailing commas.
+skip-magic-trailing-comma = false
+
+# Like Black, automatically detect the appropriate line ending.
+line-ending = "auto"
+
+[tool.pyrefly]
+project-excludes = ["src/jina_ref", "src/llada_ref", "src/mdlm_ref", "src/mauve"] # external sources
+
+[tool.pyrefly.errors]
+untyped-import = false
