@@ -1,0 +1,14 @@
+# @package _global_
+# Best-of-N sampling configuration
+
+sampling:
+  method: bon
+  predictor: ddpm_cache
+  steps: 128
+  noise_removal: True
+  num_sample_batches: 8
+  num_sample_log: 2
+  semi_ar: False
+  stride_length: 1
+  num_strides: 1
+  num_particles: 8  # Number of samples to generate

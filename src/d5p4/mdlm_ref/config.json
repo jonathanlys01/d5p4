@@ -1,0 +1,22 @@
+{
+  "_name_or_path": "kuleshov-group/mdlm-owt",
+  "architectures": [
+    "MDLM"
+  ],
+  "auto_map": {
+    "AutoConfig": "configuration_mdlm.MDLMConfig",
+    "AutoModelForMaskedLM": "modeling_mdlm.MDLM"
+  },
+  "cond_dim": 128,
+  "dropout": 0.1,
+  "hidden_dim": 768,
+  "model_length": 1024,
+  "model_type": "mdlm",
+  "n_blocks": 12,
+  "n_heads": 12,
+  "return_dict": false,
+  "time_conditioning": false,
+  "torch_dtype": "float32",
+  "transformers_version": "4.38.2",
+  "vocab_size": 50258
+}

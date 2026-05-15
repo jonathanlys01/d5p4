@@ -1,0 +1,121 @@
+defaults:
+  - /callbacks: [checkpoint_every_n_steps, checkpoint_monitor, learning_rate_monitor]
+  - /model: small
+  - /strategy: ddp
+  - /noise: loglinear
+  - /lr_scheduler: constant_warmup
+  - _self_  # Base config loaded first
+  - optional /sampling: null  # Override with sampling=random/bon/smc/greedy (has higher priority)
+
+mode: sampling_eval
+diffusion: absorbing_state
+backbone: mdlm_ref  # dit / dimamba / ar / hf_dit / mdlm_ref
+parameterization: subs  # subs / d3pm / sedd
+time_conditioning: False
+T: 0  # 0 (continuous time) / 1000 
+subs_masking: False
+
+data:
+  train: openwebtext-train
+  valid: openwebtext-valid
+  tokenizer_name_or_path: gpt2
+  cache_dir: .cache
+  wrap: false
+  streaming: false
+
+seed: 1
+compile_model: true
+
+loader:
+  global_batch_size: 512
+  eval_global_batch_size: ${.global_batch_size}
+  batch_size: ${div_up:${.global_batch_size}, ${eval:${trainer.devices} * ${trainer.num_nodes}}}
+  eval_batch_size: ${div_up:${.eval_global_batch_size}, ${eval:${trainer.devices} * ${trainer.num_nodes}}}
+  num_workers: 0
+  pin_memory: True
+
+sampling:
+  method: smc  # random / bon / smc
+  predictor: ddpm_cache  # analytic, ddpm, ddpm_cache
+  steps: 128
+  noise_removal: True
+  num_sample_batches: 8  # Number of runs to execute
+  num_sample_log: 2
+  semi_ar: False
+  stride_length: 1
+  num_strides: 1
+  num_particles: 8  # For bon method
+
+# SMC-specific configuration
+smc:
+  num_particles: 8
+  resample_interval: 50
+  lambda_weight: 5.0
+  potential_type: max  # max / mean
+
+# Greedy-specific configuration
+greedy:
+  num_candidates: 8  # Number of candidates to generate at each step for each beam
+  beam_size: 1       # Number of beams to maintain (1 = greedy, >1 = beam search)
+
+training:
+  ema: 0.9999
+  antithetic_sampling: True
+  importance_sampling: False
+  sampling_eps: 1e-3
+  change_of_variables: False
+
+eval:
+  checkpoint_path: 'kuleshov-group/mdlm-owt'  # Path to checkpoint or HuggingFace model
+  disable_ema: False
+  compute_generative_perplexity: False
+  perplexity_batch_size: 8
+  compute_perplexity_on_sanity: False
+  gen_ppl_eval_model_name_or_path: gpt2-large  # gpt2-large, meta-llama/Meta-Llama-3-8B
+  generate_samples: True
+
+optim:
+  weight_decay: 0
+  lr: 3e-4
+  beta1: 0.9
+  beta2: 0.999
+  eps: 1e-8
+
+trainer:
+  _target_: lightning.Trainer
+  accelerator: cuda
+  num_nodes: 1
+  devices: ${device_count:}
+  accumulate_grad_batches: ${div_up:${loader.global_batch_size}, ${eval:${trainer.devices} * ${loader.batch_size} * ${trainer.num_nodes}}}
+  gradient_clip_val: 1.0
+  precision: 'bf16'
+  num_sanity_val_steps: 2
+  max_steps: 1_000_000
+  log_every_n_steps: 10
+  limit_train_batches: 1.0
+  limit_val_batches: 1.0
+  val_check_interval: 10000
+
+wandb:
+  project: text-diffusion
+  notes: MDLM sampling experiments
+  group: null
+  job_type: null
+  name: null
+  id: ${.name}_${seed}
+  tags:
+    - ${noise.type}
+    - ${data.train}
+    - ${data.valid}
+    - ${sampling.method}
+
+hydra:
+  run:
+    dir: ./outputs/
+  job:
+    chdir: false
+
+checkpointing:
+  save_dir: ${cwd:}
+  resume_from_ckpt: true
+  resume_ckpt_path: ${.save_dir}/checkpoints/last.ckpt

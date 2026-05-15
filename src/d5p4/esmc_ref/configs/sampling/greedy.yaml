@@ -1,0 +1,17 @@
+# @package _global_
+# Greedy entropy minimization sampling configuration
+
+sampling:
+  method: greedy
+  predictor: ddpm_cache
+  steps: 128
+  noise_removal: True
+  num_sample_batches: 8
+  num_sample_log: 2
+  semi_ar: False
+  stride_length: 1
+  num_strides: 1
+  num_particles: 8  # Not used by greedy
+
+# Greedy uses the greedy section from main config for its specific parameters
+
